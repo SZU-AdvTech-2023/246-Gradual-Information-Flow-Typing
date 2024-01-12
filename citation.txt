@@ -1,0 +1,6 @@
+@inproceedings{REPO246,
+    author = "Disney, Tim and Flanagan, Cormac",
+    booktitle = "International workshop on scripts to programs",
+    title = "{Gradual information flow typing}",
+    year = "2011"
+}
