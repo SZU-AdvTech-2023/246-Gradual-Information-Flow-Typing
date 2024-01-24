@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "ZdPHcui1HWieShHIjz5k0vAS9dSrPHuDyTwTq3f+zCgL93k4CYTmOHlqXHZb3ugaWf0oCuu4ekWS0A2mHZzbTQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\14193\\source\\repos\\GradualSecurityTyping\\GradualSecurityTyping\\GradualSecurityTyping.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\14193\\.nuget\\packages\\fparsec\\1.1.1\\fparsec.1.1.1.nupkg.sha512",
+    "C:\\Users\\14193\\.nuget\\packages\\fsharp.core\\7.0.400\\fsharp.core.7.0.400.nupkg.sha512",
+    "C:\\Users\\14193\\.nuget\\packages\\fslexyacc\\11.2.0\\fslexyacc.11.2.0.nupkg.sha512",
+    "C:\\Users\\14193\\.nuget\\packages\\fslexyacc.runtime\\11.2.0\\fslexyacc.runtime.11.2.0.nupkg.sha512"
+  ],
+  "logs": []
+}

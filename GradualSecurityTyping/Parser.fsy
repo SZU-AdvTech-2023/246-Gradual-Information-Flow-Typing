@@ -1,0 +1,99 @@
+%{
+
+open Syntax
+
+let private mkApply t ts =
+    List.fold (fun t arg -> TermApply (t, arg)) t ts
+
+%}
+
+%token <bool> BOOL
+%token <int> INT
+%token <string> IDENT
+%token <string> TYPE_IDENT
+%token <string> STRING
+%token <SecurityLevel> LEVEL
+%token EXCL
+%token ANGLE
+%token <Syntax.Position> DOUBLE_ARROW
+%token HASH_PRINT
+%token HASH_STRING
+%token DOT
+%token ARROW
+%token BACK_DASH
+%token <Syntax.Position> SEMI_COLON
+%token MINUS
+%token PLUS
+%token MULT
+%token DIV
+%token EQUAL
+%token LESS
+%token GREATER
+%token IF
+%token THEN
+%token ELSE
+%token LET
+%token IN
+%token SEMICOLON
+%token LPAREN
+%token RPAREN
+%token EOF
+
+%left  ANGLE
+%left  ARROW
+%right SEMICOLON
+%left  PLUS MINUS
+%left  MULT DIV
+
+%type <Constant> constant
+
+%type <Term> program
+%start program
+
+%%
+program:
+    | term EOF { $1 }
+
+term:
+    | simple_term      { $1 }
+    | simple_term args { mkApply $1 $2 }
+
+simple_term:
+    | LPAREN term RPAREN { $2 }
+    | labeled_value      { TermValue $1 }
+    | IDENT              { TermVariable $1 }
+    | term EXCL labeled_type { TermClassification ($1, $3) }
+    | term DOUBLE_ARROW labeled_type { TermCast ($1, $2, $3) }
+    | term PLUS term { TermOperation (Add, [$1; $3]) }
+    | LET IDENT SEMI_COLON labeled_type EQUAL term IN term
+        { TermApply (TermValue (LabeledValue (RawVLambda ($2, $4, $8), G)), $6) }
+    | HASH_STRING term { TermOperation (ToStr, [$2]) }
+    | HASH_PRINT term { TermOperation (Print, [$2]) }
+    
+raw_value:
+    | constant { RawVConstant $1 }
+    | BACK_DASH IDENT SEMI_COLON labeled_type DOT term { RawVLambda ($2, $4, $6) }
+    | LPAREN raw_value RPAREN { $2 }
+
+labeled_value:
+    | raw_value             { LabeledValue ($1, L) }
+    | raw_value ANGLE LEVEL { LabeledValue ($1, $3) }
+
+constant:
+    | BOOL          { ConstantBool $1 }
+    | INT           { ConstantInt $1 }
+    | STRING        { ConstantString $1 }
+    | LPAREN RPAREN { ConstantUnit }
+
+raw_type:
+    | TYPE_IDENT { RawTBase (stringToBaseType $1) }
+    | labeled_type ARROW labeled_type { RawTArrow ($1, $3) }
+
+labeled_type:
+    | LPAREN labeled_type RPAREN { $2 }
+    | raw_type                   { LabeledType ($1, G) }
+    | raw_type ANGLE LEVEL       { LabeledType ($1, $3) }
+
+args:
+    | simple_term args   { $1 :: $2 }
+    | simple_term        { [$1] }

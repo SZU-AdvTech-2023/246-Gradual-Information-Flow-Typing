@@ -1,0 +1,76 @@
+{
+open FSharp.Text.Lexing
+open Syntax
+open Parser
+
+let lexeme lexbuf =
+    LexBuffer<char>.LexemeString lexbuf
+
+let getPosition (lexbuf: LexBuffer<char>) =
+    { Neg = false; Line = lexbuf.EndPos.Line; Column = lexbuf.EndPos.Column }
+
+let newline (lexbuf: LexBuffer<char>) =
+    lexbuf.StartPos <- lexbuf.StartPos.NextLine
+}
+
+let space = [ ' ' '\t' ]
+let digit = ['0' - '9']
+let int = '-'? digit+
+let newline = ("\r\n" | '\n')
+
+let ident = ['a'-'z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+let type_ident = ['A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*
+
+rule token = parse
+ | newline { newline lexbuf; token lexbuf }
+ | space+  { token lexbuf }
+ | '!'     { EXCL }
+ | "=>"    { DOUBLE_ARROW (getPosition lexbuf) }
+ | "(*"    { comment lexbuf; token lexbuf }
+ | '('     { LPAREN }
+ | ')'     { RPAREN }
+ | 'H'     { LEVEL H }
+ | 'L'     { LEVEL L }
+ | "true"  { BOOL(true) }
+ | "false" { BOOL(false) }
+ | int     { INT (int (lexeme lexbuf)) }
+ | "->"    { ARROW }
+ | '^'     { ANGLE }
+ | '.'     { DOT }
+ | '\\'    { BACK_DASH }
+ | ':'     { SEMI_COLON (getPosition lexbuf) }
+ | '-'     { MINUS }
+ | '+'     { PLUS }
+ | '*'     { MULT }
+ | '/'     { DIV }
+ | '='     { EQUAL }
+ | '<'     { LESS }
+ | '>'     { GREATER }
+ | "if"    { IF }
+ | "then"  { THEN }
+ | "else"  { ELSE }
+ | "let"   { LET }
+ | "in"    { IN }
+ | ";"     { SEMICOLON }
+ | '_'     { IDENT (lexeme lexbuf) }
+ | "#print" { HASH_PRINT }
+ | "#string" { HASH_STRING }
+ | ident   { IDENT (lexeme lexbuf) }
+ | type_ident   { TYPE_IDENT (lexeme lexbuf) }
+ | '"'     { read_string "" false lexbuf } 
+ | eof     { EOF }
+
+and comment = parse
+  | "*)"   { () }
+  | "(*"   { comment lexbuf; comment lexbuf }
+  | eof    { eprintfn "warning unterminated comment@." }
+  | _      { comment lexbuf }
+
+and read_string str ignorequote =
+  parse
+  | '"'           { if ignorequote  then (read_string (str+"\\\"") false lexbuf) else STRING (str) }
+  | '\\'          { read_string str true lexbuf }
+  | [^ '"' '\\']+ { read_string (str+(lexeme lexbuf)) false lexbuf }
+  | eof           { failwith "string is not terminated" }
+
+{}
